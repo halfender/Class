@@ -45,7 +45,7 @@ function Dashboard({ result, file }) {
   const { analysis, fileName } = result;
   const [pdfObjectUrl] = useState(() => file ? URL.createObjectURL(file) : null);
 
-  useEffect(() => {
+  const safePdfUrl = pdfObjectUrl && pdfObjectUrl.startsWith('blob:') ? pdfObjectUrl : null;
     return () => {
       if (pdfObjectUrl) URL.revokeObjectURL(pdfObjectUrl);
     };
@@ -63,9 +63,9 @@ function Dashboard({ result, file }) {
             <span className="text-sm font-medium text-slate-700 truncate">{fileName}</span>
           </div>
           <div className="flex-1">
-            {pdfObjectUrl ? (
+            {safePdfUrl ? (
               <iframe
-                src={pdfObjectUrl}
+                src={safePdfUrl}
                 title="Lease PDF"
                 className="w-full h-full"
                 style={{ minHeight: '75vh', border: 'none' }}
