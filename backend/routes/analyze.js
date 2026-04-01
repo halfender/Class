@@ -6,7 +6,7 @@ const { extractTextFromPDF } = require('../utils/pdfParser');
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const getOpenAI = () => new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const LEASE_ANALYSIS_PROMPT = `You are an expert real estate attorney specializing in tenant rights. Analyze the following apartment lease agreement and provide a detailed, structured summary.
 
@@ -52,12 +52,13 @@ router.post('/analyze', upload.single('lease'), async (req, res) => {
       return res.status(400).json({ error: 'Only PDF files are accepted' });
     }
 
-    const pdfText = await extractTextFromPDF(req.file.buffer);
+    const { text: pdfText, pageCount } = await extractTextFromPDF(req.file.buffer);
 
     if (!pdfText || pdfText.trim().length < 100) {
       return res.status(400).json({ error: 'Could not extract text from PDF. Please ensure the PDF contains readable text.' });
     }
 
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -68,13 +69,16 @@ router.post('/analyze', upload.single('lease'), async (req, res) => {
       temperature: 0.1
     });
 
-    const analysisText = completion.choices[0].message.content;
+    const analysisText = completion.choices?.[0]?.message?.content;
+    if (!analysisText) {
+      return res.status(500).json({ error: 'No response received from AI. Please try again.' });
+    }
     const analysis = JSON.parse(analysisText);
 
     res.json({
       success: true,
       fileName: req.file.originalname,
-      pageCount: pdfText.length,
+      pageCount,
       analysis
     });
   } catch (error) {

@@ -44,8 +44,19 @@ function TagList({ items, color = 'red' }) {
 function Dashboard({ result, file }) {
   const { analysis, fileName } = result;
   const [pdfObjectUrl] = useState(() => file ? URL.createObjectURL(file) : null);
+  const [safePdfUrl, setSafePdfUrl] = useState(null);
 
-  const safePdfUrl = pdfObjectUrl && pdfObjectUrl.startsWith('blob:') ? pdfObjectUrl : null;
+  useEffect(() => {
+    if (!pdfObjectUrl) return;
+    // Use URL constructor to parse and reconstruct, ensuring only blob: protocol is accepted
+    try {
+      const parsed = new URL(pdfObjectUrl);
+      if (parsed.protocol === 'blob:') {
+        setSafePdfUrl(parsed.href);
+      }
+    } catch {
+      // Invalid URL, do not set
+    }
     return () => {
       if (pdfObjectUrl) URL.revokeObjectURL(pdfObjectUrl);
     };
