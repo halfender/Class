@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RiskScore from './RiskScore';
 
 function SectionCard({ title, icon, children }) {
@@ -44,6 +44,12 @@ function TagList({ items, color = 'red' }) {
 function Dashboard({ result, file }) {
   const { analysis, fileName } = result;
   const [pdfObjectUrl] = useState(() => file ? URL.createObjectURL(file) : null);
+
+  useEffect(() => {
+    return () => {
+      if (pdfObjectUrl) URL.revokeObjectURL(pdfObjectUrl);
+    };
+  }, [pdfObjectUrl]);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full">

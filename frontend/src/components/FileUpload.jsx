@@ -25,7 +25,7 @@ function FileUpload({ onUploadSuccess, onError, onLoadingChange, isLoading }) {
     e.stopPropagation();
   }, []);
 
-  const validateFile = (file) => {
+  const validateFile = useCallback((file) => {
     if (file.type !== 'application/pdf') {
       onError('Please upload a PDF file only.');
       return false;
@@ -35,7 +35,7 @@ function FileUpload({ onUploadSuccess, onError, onLoadingChange, isLoading }) {
       return false;
     }
     return true;
-  };
+  }, [onError]);
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
@@ -45,7 +45,7 @@ function FileUpload({ onUploadSuccess, onError, onLoadingChange, isLoading }) {
     if (file && validateFile(file)) {
       setSelectedFile(file);
     }
-  }, []);
+  }, [validateFile]);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
