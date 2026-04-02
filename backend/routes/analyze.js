@@ -52,7 +52,12 @@ router.post('/analyze', upload.single('lease'), async (req, res) => {
       return res.status(400).json({ error: 'Only PDF files are accepted' });
     }
 
-    const { text: pdfText, pageCount } = await extractTextFromPDF(req.file.buffer);
+    let pdfText, pageCount;
+    try {
+      ({ text: pdfText, pageCount } = await extractTextFromPDF(req.file.buffer));
+    } catch (pdfError) {
+      return res.status(400).json({ error: 'Could not extract text from PDF. Please ensure the PDF contains readable text.' });
+    }
 
     if (!pdfText || pdfText.trim().length < 100) {
       return res.status(400).json({ error: 'Could not extract text from PDF. Please ensure the PDF contains readable text.' });
